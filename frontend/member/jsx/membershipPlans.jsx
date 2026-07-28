@@ -1,4 +1,3 @@
-import Sidebar from "./Sidebar";
 import "../css/MembershipPlans.css";
 
 // Sample data — replace this with data fetched from your PHP API
@@ -63,111 +62,105 @@ const INSIGHTS = [
 
 export default function MembershipPlans() {
     return (
-        <div className="app-layout">
-            <Sidebar active="Membership Plans" />
-
-            <div className="app-main">
-                <div className="plans-page">
-                    {/* Top bar */}
-                    <header className="topbar">
-                        <div className="topbar-search">
-                            <SearchIcon />
-                            <input type="text" placeholder="Search members, trainers, plans..." />
-                        </div>
-                        <div className="topbar-actions">
-                            <button className="btn btn-primary">
-                                <CheckInIcon />
-                                Quick Check-In
-                            </button>
-                            <button className="icon-btn" aria-label="Notifications">
-                                <BellIcon />
-                                <span className="notif-dot" />
-                            </button>
-                            <button className="icon-btn" aria-label="Settings">
-                                <GearIcon />
-                            </button>
-                            <img
-                                className="avatar-btn"
-                                src="https://i.pravatar.cc/80?img=51"
-                                alt="Account"
-                            />
-                        </div>
-                    </header>
-
-                    <main className="page-content">
-                        {/* Page header */}
-                        <div className="page-header">
-                            <div>
-                                <h1>Membership Plans &amp; Pricing</h1>
-                                <p>Manage billing cycles, access privileges, and recurring membership tiers.</p>
-                            </div>
-                            <button className="btn btn-primary">
-                                <PlusIcon />
-                                Create New Plan
-                            </button>
-                        </div>
-
-                        {/* Plan cards */}
-                        <div className="plans-grid">
-                            {PLANS.map((plan) => (
-                                <div
-                                    key={plan.id}
-                                    className={`plan-card ${plan.popular ? "popular" : ""}`}
-                                >
-                                    {plan.popular && <span className="popular-badge">Most Popular</span>}
-
-                                    <div className="plan-card-head">
-                                        <span className="plan-tier">{plan.tier}</span>
-                                        <button className="plan-delete-btn" aria-label="Delete plan">
-                                            <TrashIcon />
-                                        </button>
-                                    </div>
-
-                                    <h2 className="plan-name">{plan.name}</h2>
-
-                                    <div className="plan-price">
-                                        <span className="price-amount">{plan.price}</span>
-                                        <span className="price-cadence">{plan.cadence}</span>
-                                    </div>
-
-                                    <div className="plan-divider" />
-
-                                    <div className="plan-privileges">
-                                        <span className="privileges-label">Included Privileges:</span>
-                                        <ul>
-                                            {plan.privileges.map((p) => (
-                                                <li key={p}>
-                                                    <CheckIcon />
-                                                    {p}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-
-                                    <button className="btn btn-primary plan-assign-btn">
-                                        <AddUserIcon />
-                                        Assign to Member
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Insights */}
-                        <div className="insights-card">
-                            <h3>Membership Performance Insights</h3>
-                            <div className="insights-grid">
-                                {INSIGHTS.map((insight) => (
-                                    <div className="insight-tile" key={insight.label}>
-                                        <span className="insight-label">{insight.label}</span>
-                                        <span className="insight-value">{insight.value}</span>
-                                        <span className="insight-note">{insight.note}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </main>
+        <div className="plans-page">
+            {/* Top bar */}
+            <header className="topbar">
+                <div className="topbar-search">
+                    <SearchIcon />
+                    <input type="text" placeholder="Search members, trainers, plans..." />
                 </div>
-            </div>
+                <div className="topbar-actions">
+                    <button className="btn btn-primary">
+                        <CheckInIcon />
+                        Quick Check-In
+                    </button>
+                    <button className="icon-btn" aria-label="Notifications">
+                        <BellIcon />
+                        <span className="notif-dot" />
+                    </button>
+                    <button className="icon-btn" aria-label="Settings">
+                        <GearIcon />
+                    </button>
+                    <img
+                        className="avatar-btn"
+                        src="https://i.pravatar.cc/80?img=51"
+                        alt="Account"
+                    />
+                </div>
+            </header>
+
+            <main className="page-content">
+                {/* Page header */}
+                <div className="page-header">
+                    <div>
+                        <h1>Membership Plans &amp; Pricing</h1>
+                        <p>Manage billing cycles, access privileges, and recurring membership tiers.</p>
+                    </div>
+                    <button className="btn btn-primary">
+                        <PlusIcon />
+                        Create New Plan
+                    </button>
+                </div>
+
+                {/* Plan cards */}
+                <div className="plans-grid">
+                    {PLANS.map((plan) => (
+                        <div
+                            key={plan.id}
+                            className={`plan-card ${plan.popular ? "popular" : ""}`}
+                        >
+                            {plan.popular && <span className="popular-badge">Most Popular</span>}
+
+                            <div className="plan-card-head">
+                                <span className="plan-tier">{plan.tier}</span>
+                                <button className="plan-delete-btn" aria-label="Delete plan">
+                                    <TrashIcon />
+                                </button>
+                            </div>
+
+                            <h2 className="plan-name">{plan.name}</h2>
+
+                            <div className="plan-price">
+                                <span className="price-amount">{plan.price}</span>
+                                <span className="price-cadence">{plan.cadence}</span>
+                            </div>
+
+                            <div className="plan-divider" />
+
+                            <div className="plan-privileges">
+                                <span className="privileges-label">Included Privileges:</span>
+                                <ul>
+                                    {plan.privileges.map((p) => (
+                                        <li key={p}>
+                                            <CheckIcon />
+                                            {p}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+
+                            <button className="btn btn-primary plan-assign-btn">
+                                <AddUserIcon />
+                                Assign to Member
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Insights */}
+                <div className="insights-card">
+                    <h3>Membership Performance Insights</h3>
+                    <div className="insights-grid">
+                        {INSIGHTS.map((insight) => (
+                            <div className="insight-tile" key={insight.label}>
+                                <span className="insight-label">{insight.label}</span>
+                                <span className="insight-value">{insight.value}</span>
+                                <span className="insight-note">{insight.note}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 }
