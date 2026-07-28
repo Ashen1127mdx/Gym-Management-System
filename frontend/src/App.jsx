@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import GymLayout from "./layouts/GymLayout";
 import Home from "./pages/Home";
 import MembersDirectory from "../member/jsx/MembersDirectory";
+import AddMember from "./pages/AddMember";
 import MembershipPlans from "./pages/MembershipPlans";
 import Trainers from "./pages/Trainers";
 import Attendance from "./pages/Attendance";
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<GymLayout />}>
           <Route index element={<Home />} />
           <Route path="members" element={<MembersDirectory />} />
+          <Route path="add-member" element={<AddMember />} />
           <Route path="membership-plans" element={<MembershipPlans />} />
           <Route path="trainers" element={<Trainers />} />
           <Route path="attendance" element={<Attendance />} />

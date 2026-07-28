@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import "../css/MembersDirectory.css";
 
 // Sample data — replace this with data fetched from your PHP API
@@ -136,6 +137,8 @@ export default function MembersDirectory() {
         );
     };
 
+    const navigate = useNavigate();
+
     const toggleSelectAll = () => {
         setSelected((prev) =>
             prev.length === filteredMembers.length
@@ -179,7 +182,7 @@ export default function MembersDirectory() {
                         <h1>Members Directory</h1>
                         <p>Manage gym memberships, profiles, billing plans, and status logs.</p>
                     </div>
-                    <button className="btn btn-primary">
+                    <button className="btn btn-primary" onClick={() => navigate('/add-member')}>
                         <AddUserIcon />
                         Add New Member
                     </button>
