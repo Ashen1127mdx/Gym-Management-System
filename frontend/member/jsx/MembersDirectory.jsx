@@ -145,168 +145,166 @@ export default function MembersDirectory() {
     };
 
     return (
-        <div className="app-main">
-            <div className="members-page">
-                {/* Top bar */}
-                <header className="topbar">
-                    <div className="topbar-search">
-                        <SearchIcon />
-                        <input type="text" placeholder="Search members, trainers, plans..." />
+        <div className="members-page">
+            {/* Top bar */}
+            <header className="topbar">
+                <div className="topbar-search">
+                    <SearchIcon />
+                    <input type="text" placeholder="Search members, trainers, plans..." />
+                </div>
+                <div className="topbar-actions">
+                    <button className="btn btn-primary">
+                        <CheckInIcon />
+                        Quick Check-In
+                    </button>
+                    <button className="icon-btn" aria-label="Notifications">
+                        <BellIcon />
+                        <span className="notif-dot" />
+                    </button>
+                    <button className="icon-btn" aria-label="Settings">
+                        <GearIcon />
+                    </button>
+                    <img
+                        className="avatar-btn"
+                        src="https://i.pravatar.cc/80?img=51"
+                        alt="Account"
+                    />
+                </div>
+            </header>
+
+            <main className="page-content">
+                {/* Page header */}
+                <div className="page-header">
+                    <div>
+                        <h1>Members Directory</h1>
+                        <p>Manage gym memberships, profiles, billing plans, and status logs.</p>
                     </div>
-                    <div className="topbar-actions">
-                        <button className="btn btn-primary">
-                            <CheckInIcon />
-                            Quick Check-In
-                        </button>
-                        <button className="icon-btn" aria-label="Notifications">
-                            <BellIcon />
-                            <span className="notif-dot" />
-                        </button>
-                        <button className="icon-btn" aria-label="Settings">
-                            <GearIcon />
-                        </button>
-                        <img
-                            className="avatar-btn"
-                            src="https://i.pravatar.cc/80?img=51"
-                            alt="Account"
+                    <button className="btn btn-primary">
+                        <AddUserIcon />
+                        Add New Member
+                    </button>
+                </div>
+
+                {/* Filter bar */}
+                <div className="filter-bar">
+                    <div className="search-input">
+                        <SearchIcon />
+                        <input
+                            type="text"
+                            placeholder="Search by name, ID, email..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                </header>
 
-                <main className="page-content">
-                    {/* Page header */}
-                    <div className="page-header">
-                        <div>
-                            <h1>Members Directory</h1>
-                            <p>Manage gym memberships, profiles, billing plans, and status logs.</p>
-                        </div>
-                        <button className="btn btn-primary">
-                            <AddUserIcon />
-                            Add New Member
-                        </button>
+                    <div className="filter-tabs">
+                        {FILTERS.map((f) => (
+                            <button
+                                key={f}
+                                className={`filter-tab ${activeFilter === f ? "active" : ""}`}
+                                onClick={() => setActiveFilter(f)}
+                            >
+                                {f}
+                            </button>
+                        ))}
                     </div>
 
-                    {/* Filter bar */}
-                    <div className="filter-bar">
-                        <div className="search-input">
-                            <SearchIcon />
-                            <input
-                                type="text"
-                                placeholder="Search by name, ID, email..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
+                    <select className="plan-select" defaultValue="All Membership Plans">
+                        <option>All Membership Plans</option>
+                        <option>Monthly Pro</option>
+                        <option>Annual Elite</option>
+                        <option>Day Pass</option>
+                    </select>
+                </div>
 
-                        <div className="filter-tabs">
-                            {FILTERS.map((f) => (
-                                <button
-                                    key={f}
-                                    className={`filter-tab ${activeFilter === f ? "active" : ""}`}
-                                    onClick={() => setActiveFilter(f)}
-                                >
-                                    {f}
-                                </button>
-                            ))}
-                        </div>
-
-                        <select className="plan-select" defaultValue="All Membership Plans">
-                            <option>All Membership Plans</option>
-                            <option>Monthly Pro</option>
-                            <option>Annual Elite</option>
-                            <option>Day Pass</option>
-                        </select>
-                    </div>
-
-                    {/* Table */}
-                    <div className="table-card">
-                        <table className="members-table">
-                            <thead>
-                                <tr>
-                                    <th className="col-checkbox">
+                {/* Table */}
+                <div className="table-card">
+                    <table className="members-table">
+                        <thead>
+                            <tr>
+                                <th className="col-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            selected.length === filteredMembers.length &&
+                                            filteredMembers.length > 0
+                                        }
+                                        onChange={toggleSelectAll}
+                                    />
+                                </th>
+                                <th>Member Name</th>
+                                <th>Member ID</th>
+                                <th>Contact Info</th>
+                                <th>Plan Tier</th>
+                                <th>Joined Date</th>
+                                <th>Status</th>
+                                <th className="col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredMembers.map((m) => (
+                                <tr key={m.id}>
+                                    <td>
                                         <input
                                             type="checkbox"
-                                            checked={
-                                                selected.length === filteredMembers.length &&
-                                                filteredMembers.length > 0
-                                            }
-                                            onChange={toggleSelectAll}
+                                            checked={selected.includes(m.id)}
+                                            onChange={() => toggleSelected(m.id)}
                                         />
-                                    </th>
-                                    <th>Member Name</th>
-                                    <th>Member ID</th>
-                                    <th>Contact Info</th>
-                                    <th>Plan Tier</th>
-                                    <th>Joined Date</th>
-                                    <th>Status</th>
-                                    <th className="col-actions">Actions</th>
+                                    </td>
+                                    <td>
+                                        <div className="member-cell">
+                                            {m.avatar ? (
+                                                <img src={m.avatar} alt={m.name} className="member-avatar" />
+                                            ) : (
+                                                <span className="member-initials">{m.initials}</span>
+                                            )}
+                                            <div>
+                                                <div className="member-name">{m.name}</div>
+                                                <div className="member-gender">{m.gender}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="member-id">#{m.id}</td>
+                                    <td>
+                                        <div className="contact-email">{m.email}</div>
+                                        <div className="contact-phone">{m.phone}</div>
+                                    </td>
+                                    <td>
+                                        <span className="plan-badge">{m.plan}</span>
+                                    </td>
+                                    <td className="joined-date">{m.joined}</td>
+                                    <td>
+                                        <span className={`status-badge ${STATUS_CLASS[m.status]}`}>
+                                            {m.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div className="row-actions">
+                                            <button className="row-action-btn" aria-label="Check in">
+                                                <CheckInIcon small />
+                                            </button>
+                                            <button className="row-action-btn delete" aria-label="Delete">
+                                                <TrashIcon />
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {filteredMembers.map((m) => (
-                                    <tr key={m.id}>
-                                        <td>
-                                            <input
-                                                type="checkbox"
-                                                checked={selected.includes(m.id)}
-                                                onChange={() => toggleSelected(m.id)}
-                                            />
-                                        </td>
-                                        <td>
-                                            <div className="member-cell">
-                                                {m.avatar ? (
-                                                    <img src={m.avatar} alt={m.name} className="member-avatar" />
-                                                ) : (
-                                                    <span className="member-initials">{m.initials}</span>
-                                                )}
-                                                <div>
-                                                    <div className="member-name">{m.name}</div>
-                                                    <div className="member-gender">{m.gender}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="member-id">#{m.id}</td>
-                                        <td>
-                                            <div className="contact-email">{m.email}</div>
-                                            <div className="contact-phone">{m.phone}</div>
-                                        </td>
-                                        <td>
-                                            <span className="plan-badge">{m.plan}</span>
-                                        </td>
-                                        <td className="joined-date">{m.joined}</td>
-                                        <td>
-                                            <span className={`status-badge ${STATUS_CLASS[m.status]}`}>
-                                                {m.status}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="row-actions">
-                                                <button className="row-action-btn" aria-label="Check in">
-                                                    <CheckInIcon small />
-                                                </button>
-                                                <button className="row-action-btn delete" aria-label="Delete">
-                                                    <TrashIcon />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                            ))}
+                        </tbody>
+                    </table>
 
-                        <div className="table-footer">
-                            <span>
-                                Showing {filteredMembers.length} of {MEMBERS.length} members
-                            </span>
-                            <div className="pagination">
-                                <button className="page-btn">Previous</button>
-                                <button className="page-btn active">1</button>
-                                <button className="page-btn">Next</button>
-                            </div>
+                    <div className="table-footer">
+                        <span>
+                            Showing {filteredMembers.length} of {MEMBERS.length} members
+                        </span>
+                        <div className="pagination">
+                            <button className="page-btn">Previous</button>
+                            <button className="page-btn active">1</button>
+                            <button className="page-btn">Next</button>
                         </div>
                     </div>
-                </main>
-            </div>
+                </div>
+            </main>
         </div>
     );
 }
