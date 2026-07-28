@@ -60,6 +60,10 @@
     border-left: 3px solid transparent;
 }
 
+.nav-item {
+    text-decoration: none;
+}
+
 .nav-item:hover {
     background: rgba(255, 255, 255, 0.04);
 }

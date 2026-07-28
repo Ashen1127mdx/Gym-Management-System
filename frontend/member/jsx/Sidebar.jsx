@@ -1,23 +1,16 @@
-import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import "../css/Sidebar.css";
 
 const NAV_ITEMS = [
-    { label: "Home", icon: HomeIcon },
-    { label: "Members", icon: MembersIcon },
-    { label: "Membership Plans", icon: PlansIcon },
-    { label: "Trainers", icon: TrainersIcon },
-    { label: "Attendance", icon: AttendanceIcon },
-    { label: "Reports", icon: ReportsIcon },
+    { label: "Home", path: "/", icon: HomeIcon },
+    { label: "Members", path: "/members", icon: MembersIcon },
+    { label: "Membership Plans", path: "/membership-plans", icon: PlansIcon },
+    { label: "Trainers", path: "/trainers", icon: TrainersIcon },
+    { label: "Attendance", path: "/attendance", icon: AttendanceIcon },
+    { label: "Reports", path: "/reports", icon: ReportsIcon },
 ];
 
-export default function Sidebar({ active = "Members", onNavigate }) {
-    const [activeNav, setActiveNav] = useState(active);
-
-    const handleClick = (label) => {
-        setActiveNav(label);
-        if (onNavigate) onNavigate(label);
-    };
-
+export default function Sidebar() {
     return (
         <aside className="sidebar">
             <div className="sidebar-brand">
@@ -26,24 +19,20 @@ export default function Sidebar({ active = "Members", onNavigate }) {
             </div>
 
             <nav className="sidebar-nav">
-                {NAV_ITEMS.map(({ label, icon: Icon }) => (
-                    <button
+                {NAV_ITEMS.map(({ label, path, icon: Icon }) => (
+                    <NavLink
                         key={label}
-                        className={`nav-item ${activeNav === label ? "active" : ""}`}
-                        onClick={() => handleClick(label)}
+                        to={path}
+                        className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
                     >
                         <Icon />
                         <span>{label}</span>
-                    </button>
+                    </NavLink>
                 ))}
             </nav>
 
             <div className="sidebar-footer">
-                <img
-                    className="footer-avatar"
-                    src="https://i.pravatar.cc/80?img=51"
-                    alt="Alex Rivera"
-                />
+                <img className="footer-avatar" src="https://i.pravatar.cc/80?img=51" alt="Alex Rivera" />
                 <div className="footer-info">
                     <div className="footer-name">Alex Rivera</div>
                     <div className="footer-role">SUPER ADMIN</div>
