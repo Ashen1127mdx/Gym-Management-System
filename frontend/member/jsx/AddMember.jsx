@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../css/AddMember.css";
 
@@ -36,43 +36,100 @@ export default function AddMember() {
     const [form, setForm] = useState(initialFormState);
     const [message, setMessage] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [photoFile, setPhotoFile] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
+    const [photoError, setPhotoError] = useState(null);
+    const fileInputRef = useRef(null);
     const navigate = useNavigate();
 
     const handleChange = (field) => (e) => {
         setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
+    useEffect(() => {
+        return () => {
+            if (photoPreview) {
+                URL.revokeObjectURL(photoPreview);
+            }
+        };
+    }, [photoPreview]);
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
+        setPhotoError(null);
+
+        if (!file) {
+            return;
+        }
+
+        const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+            setPhotoError("Only PNG, JPG, or WEBP images are allowed.");
+            e.target.value = "";
+            setPhotoFile(null);
+            setPhotoPreview(null);
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            setPhotoError("Image must be 5MB or smaller.");
+            e.target.value = "";
+            setPhotoFile(null);
+            setPhotoPreview(null);
+            return;
+        }
+
+        if (photoPreview) {
+            URL.revokeObjectURL(photoPreview);
+        }
+
+        const previewUrl = URL.createObjectURL(file);
+        setPhotoFile(file);
+        setPhotoPreview(previewUrl);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage(null);
 
-        const payload = {
-            full_name: form.fullName.trim(),
-            nic: form.nationalId.trim(),
-            dob: form.dob,
-            gender: form.gender,
-            email: form.email.trim(),
-            contact: form.phone.trim(),
-            address: form.address.trim() || null,
-            emergency_contact: form.emergencyContact.trim() || null,
-            plan_label: form.plan,
-            join_date: new Date().toISOString().slice(0, 10),
-            photo: form.photoUrl.trim() || null,
-            status: form.status,
-        };
+        const requiredFields = [
+            form.fullName,
+            form.nationalId,
+            form.dob,
+            form.email,
+            form.phone,
+            form.gender,
+            form.plan,
+            form.status,
+        ];
 
-        if (
-            !payload.full_name ||
-            !payload.nic ||
-            !payload.dob ||
-            !payload.email ||
-            !payload.contact ||
-            !payload.gender ||
-            !payload.plan_label ||
-            !payload.status
-        ) {
+        if (requiredFields.some((value) => !value?.toString().trim())) {
             setMessage({ type: "error", text: "Please complete all required fields." });
             return;
+        }
+
+        if (photoError) {
+            setMessage({ type: "error", text: photoError });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("full_name", form.fullName.trim());
+        formData.append("nic", form.nationalId.trim());
+        formData.append("dob", form.dob);
+        formData.append("gender", form.gender);
+        formData.append("email", form.email.trim());
+        formData.append("contact", form.phone.trim());
+        formData.append("address", form.address.trim() || "");
+        formData.append("emergency_contact", form.emergencyContact.trim() || "");
+        formData.append("plan_label", form.plan);
+        formData.append("join_date", new Date().toISOString().slice(0, 10));
+        formData.append("status", form.status);
+
+        if (photoFile) {
+            formData.append("photo", photoFile);
+        } else if (form.photoUrl.trim()) {
+            formData.append("photo_url", form.photoUrl.trim());
         }
 
         setSubmitting(true);
@@ -80,20 +137,10 @@ export default function AddMember() {
         try {
             const response = await fetch(`${API_BASE}/addMember.php`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
+                body: formData,
             });
 
-            const responseText = await response.text();
-            let json;
-
-            try {
-                json = responseText ? JSON.parse(responseText) : {};
-            } catch (parseError) {
-                throw new Error(`Invalid server response: ${responseText}`);
-            }
+            const json = await response.json();
 
             if (!response.ok || !json.success) {
                 throw new Error(json.message || json.error || "Unable to add member.");
@@ -101,6 +148,8 @@ export default function AddMember() {
 
             setMessage({ type: "success", text: json.message || "Member added successfully." });
             setForm(initialFormState);
+            setPhotoFile(null);
+            setPhotoPreview(null);
             navigate("/members", {
                 state: {
                     refresh: true,
@@ -285,14 +334,31 @@ export default function AddMember() {
                                     onChange={handleChange("photoUrl")}
                                 />
                             </div>
-                            <label className="upload-box">
+                            <label
+                                className="upload-box"
+                                htmlFor="member-photo-upload"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
                                 <CameraIcon />
                                 <span className="upload-title">Camera Capture / Upload</span>
                                 <span className="upload-sub">
                                     PNG, JPG or WEBP formats supported up to 5MB
                                 </span>
-                                <input type="file" accept="image/png,image/jpeg,image/webp" hidden />
+                                <input
+                                    id="member-photo-upload"
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    hidden
+                                    onChange={handleFileChange}
+                                />
                             </label>
+                            {photoError && <div className="field-error">{photoError}</div>}
+                            {photoPreview && (
+                                <div className="photo-preview">
+                                    <img src={photoPreview} alt="Selected preview" />
+                                </div>
+                            )}
                         </section>
                     </div>
 

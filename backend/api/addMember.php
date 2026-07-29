@@ -62,6 +62,48 @@ try {
         }
     }
 
+    $photoUrl = null;
+    if (!empty($_FILES['photo']) && $_FILES['photo']['error'] !== UPLOAD_ERR_NO_FILE) {
+        $photoFile = $_FILES['photo'];
+        $allowedTypes = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+        ];
+
+        if ($photoFile['error'] !== UPLOAD_ERR_OK) {
+            throw new InvalidArgumentException('Photo upload failed with error code: ' . $photoFile['error']);
+        }
+
+        if (!isset($allowedTypes[$photoFile['type']])) {
+            throw new InvalidArgumentException('Uploaded photo must be PNG, JPG, or WEBP.');
+        }
+
+        if ($photoFile['size'] > 5 * 1024 * 1024) {
+            throw new InvalidArgumentException('Uploaded photo must be 5MB or smaller.');
+        }
+
+        $uploadDir = __DIR__ . '/../uploads';
+        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+            throw new RuntimeException('Unable to create upload directory.');
+        }
+
+        $extension = $allowedTypes[$photoFile['type']];
+        $filename = 'member_' . uniqid('', true) . '.' . $extension;
+        $destination = $uploadDir . DIRECTORY_SEPARATOR . $filename;
+
+        if (!move_uploaded_file($photoFile['tmp_name'], $destination)) {
+            throw new RuntimeException('Failed to save uploaded photo.');
+        }
+
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') === '443') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $basePath = dirname(dirname($_SERVER['SCRIPT_NAME']));
+        $photoUrl = sprintf('%s://%s%s/uploads/%s', $scheme, $host, $basePath, $filename);
+    } elseif (!empty($body['photo_url'])) {
+        $photoUrl = trim($body['photo_url']);
+    }
+
     $database = new Database();
     $database->ensureSchema();
     $db = $database->connect();
@@ -106,7 +148,7 @@ try {
         ':emergency_contact' => !empty($body['emergency_contact']) ? trim($body['emergency_contact']) : null,
         ':plan_label' => !empty($body['plan_label']) ? trim($body['plan_label']) : null,
         ':join_date' => $body['join_date'],
-        ':photo' => !empty($body['photo']) ? trim($body['photo']) : null,
+        ':photo' => $photoUrl,
         ':status' => trim($body['status']),
     ]);
 
@@ -127,7 +169,7 @@ try {
             'emergency_contact' => !empty($body['emergency_contact']) ? trim($body['emergency_contact']) : null,
             'plan_label' => !empty($body['plan_label']) ? trim($body['plan_label']) : null,
             'join_date' => $body['join_date'],
-            'photo' => !empty($body['photo']) ? trim($body['photo']) : null,
+            'photo' => $photoUrl,
             'status' => trim($body['status']),
         ],
     ]);
