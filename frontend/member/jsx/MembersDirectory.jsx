@@ -1,109 +1,8 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../css/MembersDirectory.css";
 
-// Sample data — replace this with data fetched from your PHP API
-const MEMBERS = [
-    {
-        id: "FZ-1029",
-        name: "Sarah Jenkins",
-        gender: "Female",
-        email: "s.jenkins@email.com",
-        phone: "+1 987 654 321",
-        plan: "Monthly Pro",
-        joined: "Nov 05, 2023",
-        status: "Active",
-        avatar: "https://i.pravatar.cc/80?img=47",
-    },
-    {
-        id: "FZ-1045",
-        name: "Marcus Thompson",
-        gender: "Male",
-        email: "marcus.t@fitzone.com",
-        phone: "+1 234 567 890",
-        plan: "Annual Elite",
-        joined: "Oct 24, 2023",
-        status: "Active",
-        avatar: "https://i.pravatar.cc/80?img=12",
-    },
-    {
-        id: "FZ-0998",
-        name: "Elena Rodriguez",
-        gender: "Female",
-        email: "elena.r@web.com",
-        phone: "+1 444 321 0987",
-        plan: "Day Pass",
-        joined: "Mar 28, 2024",
-        status: "Guest",
-        avatar: "https://i.pravatar.cc/80?img=32",
-    },
-    {
-        id: "FZ-1102",
-        name: "David Lee",
-        gender: "Male",
-        email: "david.lee@service.org",
-        phone: "+1 555 123 4567",
-        plan: "Annual Elite",
-        joined: "Jan 12, 2024",
-        status: "Active",
-        avatar: "https://i.pravatar.cc/80?img=14",
-    },
-    {
-        id: "FZ-1051",
-        name: "Kelly White",
-        gender: "Female",
-        email: "kelly.w@mail.com",
-        phone: "+1 222 333 4444",
-        plan: "Monthly Pro",
-        joined: "Feb 15, 2024",
-        status: "Flagged",
-        avatar: "https://i.pravatar.cc/80?img=25",
-    },
-    {
-        id: "FZ-1011",
-        name: "John Doe",
-        gender: "Male",
-        email: "john.doe@email.com",
-        phone: "+1 234 567 890",
-        plan: "Annual Elite",
-        joined: "Oct 12, 2023",
-        status: "Active",
-        avatar: "https://i.pravatar.cc/80?img=8",
-    },
-    {
-        id: "FZ-1088",
-        name: "Michael Chen",
-        gender: "Male",
-        email: "m.chen@service.org",
-        phone: "+1 555 123 4567",
-        plan: "Annual Elite",
-        joined: "Jan 12, 2024",
-        status: "Active",
-        initials: "MC",
-    },
-    {
-        id: "FZ-1092",
-        name: "Amanda Miller",
-        gender: "Female",
-        email: "amanda.m@web.com",
-        phone: "+1 444 321 0987",
-        plan: "Day Pass",
-        joined: "Mar 28, 2024",
-        status: "Active",
-        initials: "AM",
-    },
-    {
-        id: "FZ-1077",
-        name: "David Ross",
-        gender: "Male",
-        email: "ross.david@mail.com",
-        phone: "+1 222 333 4444",
-        plan: "Monthly Pro",
-        joined: "Feb 15, 2024",
-        status: "Expired",
-        initials: "DR",
-    },
-];
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const FILTERS = ["All", "Active", "Guest", "Expired", "Flagged"];
 const STATUS_CLASS = {
@@ -113,23 +12,103 @@ const STATUS_CLASS = {
     Expired: "status-expired",
 };
 
+const normalizeMembers = (members) =>
+    members.map((member) => normalizeMember(member));
+
+const normalizeMember = (member) => ({
+    ...member,
+    id: String(member.member_id),
+    name: member.full_name || "",
+    email: member.email || "",
+    gender: member.gender || "",
+    plan: member.plan_label || "Unassigned",
+    joined: member.join_date || "",
+    phone: member.contact || "",
+    initials: member.photo
+        ? null
+        : (member.full_name || "")
+            .split(" ")
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+    avatar: member.photo || null,
+    status: member.status || "Active",
+});
+
 export default function MembersDirectory() {
+    const [members, setMembers] = useState([]);
     const [activeFilter, setActiveFilter] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
     const [selected, setSelected] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [deletingIds, setDeletingIds] = useState([]);
+
+    const fetchMembers = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`${API_BASE}/getMembers.php`);
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Failed to load members.");
+            }
+
+            setMembers(normalizeMembers(data.data || []));
+        } catch (fetchError) {
+            setError(fetchError.message);
+            setMembers([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteMember = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this member?")) {
+            return;
+        }
+
+        setError(null);
+        setDeletingIds((prev) => [...prev, id]);
+
+        try {
+            const response = await fetch(`${API_BASE}/deleteMember.php`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ member_id: id }),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || data.message || "Failed to delete member.");
+            }
+
+            setMembers((prev) => prev.filter((member) => member.id !== id));
+            setSelected((prev) => prev.filter((selectedId) => selectedId !== id));
+        } catch (deleteError) {
+            setError(deleteError.message);
+        } finally {
+            setDeletingIds((prev) => prev.filter((deletingId) => deletingId !== id));
+        }
+    };
 
     const filteredMembers = useMemo(() => {
-        return MEMBERS.filter((m) => {
+        return members.filter((m) => {
             const matchesFilter = activeFilter === "All" || m.status === activeFilter;
             const q = searchTerm.trim().toLowerCase();
             const matchesSearch =
                 !q ||
                 m.name.toLowerCase().includes(q) ||
-                m.id.toLowerCase().includes(q) ||
+                String(m.id).toLowerCase().includes(q) ||
                 m.email.toLowerCase().includes(q);
             return matchesFilter && matchesSearch;
         });
-    }, [activeFilter, searchTerm]);
+    }, [activeFilter, searchTerm, members]);
 
     const toggleSelected = (id) => {
         setSelected((prev) =>
@@ -138,6 +117,7 @@ export default function MembersDirectory() {
     };
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const toggleSelectAll = () => {
         setSelected((prev) =>
@@ -146,6 +126,28 @@ export default function MembersDirectory() {
                 : filteredMembers.map((m) => m.id)
         );
     };
+
+    useEffect(() => {
+        fetchMembers();
+    }, []);
+
+    useEffect(() => {
+        if (location.state?.refresh === true) {
+            fetchMembers();
+        }
+    }, [location.state]);
+
+    useEffect(() => {
+        if (location.state?.newMember) {
+            const normalized = normalizeMember(location.state.newMember);
+            setMembers((prev) => {
+                if (prev.some((member) => member.id === normalized.id)) {
+                    return prev;
+                }
+                return [normalized, ...prev];
+            });
+        }
+    }, [location.state?.newMember]);
 
     return (
         <div className="members-page">
@@ -187,6 +189,12 @@ export default function MembersDirectory() {
                         Add New Member
                     </button>
                 </div>
+
+                {loading && <div className="info-banner">Loading members...</div>}
+                {error && <div className="error-banner">{error}</div>}
+                {!loading && !error && members.length === 0 && (
+                    <div className="info-banner">No members found yet.</div>
+                )}
 
                 {/* Filter bar */}
                 <div className="filter-bar">
@@ -286,8 +294,13 @@ export default function MembersDirectory() {
                                             <button className="row-action-btn" aria-label="Check in">
                                                 <CheckInIcon small />
                                             </button>
-                                            <button className="row-action-btn delete" aria-label="Delete">
-                                                <TrashIcon />
+                                            <button
+                                                className="row-action-btn delete"
+                                                aria-label="Delete"
+                                                disabled={deletingIds.includes(m.id)}
+                                                onClick={() => handleDeleteMember(m.id)}
+                                            >
+                                                {deletingIds.includes(m.id) ? "Deleting..." : <TrashIcon />}
                                             </button>
                                         </div>
                                     </td>
@@ -298,7 +311,7 @@ export default function MembersDirectory() {
 
                     <div className="table-footer">
                         <span>
-                            Showing {filteredMembers.length} of {MEMBERS.length} members
+                            Showing {filteredMembers.length} of {members.length} members
                         </span>
                         <div className="pagination">
                             <button className="page-btn">Previous</button>
