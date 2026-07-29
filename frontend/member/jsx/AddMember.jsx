@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../css/AddMember.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
@@ -18,7 +18,7 @@ const STATUS_OPTIONS = [
 
 const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"];
 
-const initialFormState = {
+const getInitialFormState = () => ({
     fullName: "",
     nationalId: "",
     dob: "",
@@ -29,30 +29,83 @@ const initialFormState = {
     emergencyContact: "",
     plan: PLAN_OPTIONS[0],
     status: STATUS_OPTIONS[0],
+    joinDate: new Date().toISOString().slice(0, 10),
     photoUrl: "",
-};
+});
 
 export default function AddMember() {
-    const [form, setForm] = useState(initialFormState);
+    const [form, setForm] = useState(getInitialFormState());
     const [message, setMessage] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [photoFile, setPhotoFile] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
     const [photoError, setPhotoError] = useState(null);
+    const [mode, setMode] = useState("add");
+    const [memberId, setMemberId] = useState(null);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const fetchMemberById = async (id) => {
+        const response = await fetch(`${API_BASE}/getMembers.php?member_id=${id}`);
+        const json = await response.json();
+
+        if (!response.ok || !json.success) {
+            throw new Error(json.message || "Unable to load member data.");
+        }
+
+        if (!Array.isArray(json.data) || json.data.length === 0) {
+            throw new Error("Member not found.");
+        }
+
+        return json.data[0];
+    };
 
     const handleChange = (field) => (e) => {
         setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
     useEffect(() => {
+        const prepareEditForm = async () => {
+            if (location.state?.mode !== "edit") {
+                return;
+            }
+
+            setMode("edit");
+            setMemberId(location.state.member_id ?? null);
+
+            try {
+                const member = location.state.member
+                    ? location.state.member
+                    : await fetchMemberById(location.state.member_id);
+
+                setForm({
+                    fullName: member.full_name || "",
+                    nationalId: member.nic || "",
+                    dob: member.dob || "",
+                    gender: member.gender || "Male",
+                    email: member.email || "",
+                    phone: member.contact || "",
+                    address: member.address || "",
+                    emergencyContact: member.emergency_contact || "",
+                    plan: member.plan_label || member.plan || PLAN_OPTIONS[0],
+                    status: member.status || STATUS_OPTIONS[0],
+                    joinDate: member.join_date || new Date().toISOString().slice(0, 10),
+                    photoUrl: member.photo_url || "",
+                });
+            } catch (fetchError) {
+                setMessage({ type: "error", text: fetchError.message });
+            }
+        };
+
+        prepareEditForm();
+
         return () => {
             if (photoPreview) {
                 URL.revokeObjectURL(photoPreview);
             }
         };
-    }, [photoPreview]);
+    }, [location.state, photoPreview]);
 
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
@@ -101,6 +154,7 @@ export default function AddMember() {
             form.gender,
             form.plan,
             form.status,
+            form.joinDate,
         ];
 
         if (requiredFields.some((value) => !value?.toString().trim())) {
@@ -123,7 +177,7 @@ export default function AddMember() {
         formData.append("address", form.address.trim() || "");
         formData.append("emergency_contact", form.emergencyContact.trim() || "");
         formData.append("plan_label", form.plan);
-        formData.append("join_date", new Date().toISOString().slice(0, 10));
+        formData.append("join_date", form.joinDate || new Date().toISOString().slice(0, 10));
         formData.append("status", form.status);
 
         if (photoFile) {
@@ -132,10 +186,15 @@ export default function AddMember() {
             formData.append("photo_url", form.photoUrl.trim());
         }
 
+        if (mode === "edit" && memberId) {
+            formData.append("member_id", memberId);
+        }
+
         setSubmitting(true);
 
         try {
-            const response = await fetch(`${API_BASE}/addMember.php`, {
+            const endpoint = mode === "edit" ? "updateMember.php" : "addMember.php";
+            const response = await fetch(`${API_BASE}/${endpoint}`, {
                 method: "POST",
                 body: formData,
             });
@@ -143,19 +202,31 @@ export default function AddMember() {
             const json = await response.json();
 
             if (!response.ok || !json.success) {
-                throw new Error(json.message || json.error || "Unable to add member.");
+                const errorText = json.message || (json.errors ? json.errors.join(" ") : json.error || "Unable to save member.");
+                throw new Error(errorText);
             }
 
-            setMessage({ type: "success", text: json.message || "Member added successfully." });
-            setForm(initialFormState);
-            setPhotoFile(null);
-            setPhotoPreview(null);
-            navigate("/members", {
-                state: {
-                    refresh: true,
-                    newMember: json.member,
-                },
-            });
+            setMessage({ type: "success", text: json.message || (mode === "edit" ? "Member updated successfully." : "Member added successfully.") });
+
+            if (mode === "add") {
+                setForm(getInitialFormState());
+                setPhotoFile(null);
+                setPhotoPreview(null);
+                navigate("/members", {
+                    state: {
+                        refresh: true,
+                        newMember: json.member,
+                        successMessage: json.message || "Member added successfully.",
+                    },
+                });
+            } else {
+                navigate("/members", {
+                    state: {
+                        refresh: true,
+                        successMessage: json.message || "Member updated successfully.",
+                    },
+                });
+            }
         } catch (err) {
             setMessage({ type: "error", text: err.message });
         } finally {
@@ -198,11 +269,13 @@ export default function AddMember() {
                 </Link>
 
                 <div className="page-header">
-                    <h1>New Member Registration</h1>
+                    <h1>{mode === "edit" ? "Edit Member" : "New Member Registration"}</h1>
                     <p>Complete member identification, plan enrolment, and contact details.</p>
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    <input type="hidden" name="mode" value={mode} />
+                    <input type="hidden" name="member_id" value={memberId || ""} />
                     {/* Personal Information */}
                     <section className="form-card">
                         <div className="form-card-title">
@@ -318,6 +391,14 @@ export default function AddMember() {
                                     ))}
                                 </select>
                             </div>
+                            <div className="form-field">
+                                <label>Join Date</label>
+                                <input
+                                    type="date"
+                                    value={form.joinDate}
+                                    onChange={handleChange("joinDate")}
+                                />
+                            </div>
                         </section>
 
                         <section className="form-card">
@@ -367,9 +448,9 @@ export default function AddMember() {
                         <Link to="/members" className="btn-text">
                             Cancel
                         </Link>
-                        <button type="submit" className="btn btn-primary">
+                        <button type="submit" className="btn btn-primary" disabled={submitting}>
                             <AddUserIcon />
-                            Register &amp; Enrol Member
+                            {mode === "edit" ? "Update Member" : "Register & Enrol Member"}
                         </button>
                     </div>
                 </form>
