@@ -21,7 +21,32 @@ try {
     $database->ensureSchema();
     $db = $database->connect();
 
-    $query = "SELECT
+    $memberId = null;
+    if (!empty($_GET['member_id']) && is_numeric($_GET['member_id'])) {
+        $memberId = (int) $_GET['member_id'];
+    }
+
+    if ($memberId !== null) {
+        $stmt = $db->prepare("SELECT
+            m.member_id,
+            m.full_name,
+            m.nic,
+            m.dob,
+            m.gender,
+            m.contact,
+            m.email,
+            m.address,
+            m.emergency_contact,
+            m.plan_id,
+            m.plan_label,
+            m.join_date,
+            m.photo AS photo_url,
+            m.status
+        FROM members m
+        WHERE m.member_id = :member_id");
+        $stmt->execute([':member_id' => $memberId]);
+    } else {
+        $query = "SELECT
             m.member_id,
             m.full_name,
             m.nic,
@@ -38,8 +63,9 @@ try {
             m.status
         FROM members m
         ORDER BY m.join_date DESC, m.member_id DESC";
+        $stmt = $db->query($query);
+    }
 
-    $stmt = $db->query($query);
     $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([

@@ -12,6 +12,23 @@ const STATUS_CLASS = {
     Expired: "status-expired",
 };
 
+const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"];
+
+const initialEditForm = {
+    fullName: "",
+    nic: "",
+    dob: "",
+    gender: "Male",
+    email: "",
+    phone: "",
+    address: "",
+    emergencyContact: "",
+    plan: "Monthly Pro ($49/mo)",
+    status: "Active",
+    joinDate: "",
+    photoUrl: "",
+};
+
 const normalizeMembers = (members) =>
     members.map((member) => normalizeMember(member));
 
@@ -44,6 +61,15 @@ export default function MembersDirectory() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [deletingIds, setDeletingIds] = useState([]);
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editMemberId, setEditMemberId] = useState(null);
+    const [editForm, setEditForm] = useState(initialEditForm);
+    const [editSubmitting, setEditSubmitting] = useState(false);
+    const [editError, setEditError] = useState(null);
+    const [editSuccess, setEditSuccess] = useState(null);
+    const [editPhotoFile, setEditPhotoFile] = useState(null);
+    const [editPhotoPreview, setEditPhotoPreview] = useState(null);
+    const [editPhotoError, setEditPhotoError] = useState(null);
     const [failedAvatars, setFailedAvatars] = useState([]);
 
     const fetchMembers = async () => {
@@ -119,6 +145,173 @@ export default function MembersDirectory() {
 
     const navigate = useNavigate();
     const location = useLocation();
+
+    const resetEditState = () => {
+        setEditMemberId(null);
+        setEditForm(initialEditForm);
+        setEditSubmitting(false);
+        setEditError(null);
+        setEditSuccess(null);
+        setEditPhotoFile(null);
+        setEditPhotoPreview(null);
+        setEditPhotoError(null);
+    };
+
+    const setEditFormFromMember = (member) => {
+        setEditForm({
+            fullName: member.full_name || member.name || "",
+            nic: member.nic || "",
+            dob: member.dob || "",
+            gender: member.gender || "Male",
+            email: member.email || "",
+            phone: member.contact || "",
+            address: member.address || "",
+            emergencyContact: member.emergency_contact || "",
+            plan: member.plan_label || member.plan || "Monthly Pro ($49/mo)",
+            status: member.status || "Active",
+            joinDate: member.join_date || member.joined || "",
+            photoUrl: member.photo_url || member.avatar || "",
+        });
+    };
+
+    const fetchMemberById = async (id) => {
+        const response = await fetch(`${API_BASE}/getMembers.php?member_id=${id}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Unable to load member data.");
+        }
+        if (!Array.isArray(data.data) || data.data.length === 0) {
+            throw new Error("Member not found.");
+        }
+        return data.data[0];
+    };
+
+    const openEditModal = async (id) => {
+        resetEditState();
+        try {
+            const existing = members.find((member) => member.id === id);
+            const member = existing ? existing : await fetchMemberById(id);
+            setEditMemberId(id);
+            setEditFormFromMember(member);
+            setIsEditOpen(true);
+        } catch (fetchError) {
+            setError(fetchError.message);
+        }
+    };
+
+    const closeEditModal = () => {
+        resetEditState();
+        setIsEditOpen(false);
+    };
+
+    const handleEditChange = (field) => (e) => {
+        setEditForm((prev) => ({ ...prev, [field]: e.target.value }));
+    };
+
+    const handleEditFileChange = (e) => {
+        const file = e.target.files?.[0];
+        setEditPhotoError(null);
+
+        if (!file) {
+            return;
+        }
+
+        const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+            setEditPhotoError("Only PNG, JPG, or WEBP images are allowed.");
+            e.target.value = "";
+            setEditPhotoFile(null);
+            setEditPhotoPreview(null);
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            setEditPhotoError("Image must be 5MB or smaller.");
+            e.target.value = "";
+            setEditPhotoFile(null);
+            setEditPhotoPreview(null);
+            return;
+        }
+
+        if (editPhotoPreview) {
+            URL.revokeObjectURL(editPhotoPreview);
+        }
+
+        setEditPhotoFile(file);
+        setEditPhotoPreview(URL.createObjectURL(file));
+    };
+
+    const handleUpdateSubmit = async (e) => {
+        e.preventDefault();
+        setEditError(null);
+        setEditSuccess(null);
+
+        const requiredFields = [
+            editForm.fullName,
+            editForm.nic,
+            editForm.dob,
+            editForm.email,
+            editForm.phone,
+            editForm.gender,
+            editForm.plan,
+            editForm.status,
+            editForm.joinDate,
+        ];
+
+        if (requiredFields.some((value) => !value?.toString().trim())) {
+            setEditError("Please complete all required fields.");
+            return;
+        }
+
+        if (editPhotoError) {
+            setEditError(editPhotoError);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("member_id", editMemberId);
+        formData.append("full_name", editForm.fullName.trim());
+        formData.append("nic", editForm.nic.trim());
+        formData.append("dob", editForm.dob);
+        formData.append("gender", editForm.gender);
+        formData.append("email", editForm.email.trim());
+        formData.append("contact", editForm.phone.trim());
+        formData.append("address", editForm.address.trim() || "");
+        formData.append("emergency_contact", editForm.emergencyContact.trim() || "");
+        formData.append("plan_label", editForm.plan);
+        formData.append("join_date", editForm.joinDate);
+        formData.append("status", editForm.status);
+
+        if (editPhotoFile) {
+            formData.append("photo", editPhotoFile);
+        } else if (editForm.photoUrl.trim()) {
+            formData.append("photo_url", editForm.photoUrl.trim());
+        }
+
+        setEditSubmitting(true);
+
+        try {
+            const response = await fetch(`${API_BASE}/updateMember.php`, {
+                method: "POST",
+                body: formData,
+            });
+
+            const json = await response.json();
+
+            if (!response.ok || !json.success) {
+                const errorMessage = json.message || (json.errors ? json.errors.join(" ") : "Unable to update member.");
+                throw new Error(errorMessage);
+            }
+
+            setEditSuccess(json.message || "Member updated successfully.");
+            closeEditModal();
+            fetchMembers();
+        } catch (updateError) {
+            setEditError(updateError.message);
+        } finally {
+            setEditSubmitting(false);
+        }
+    };
 
     const toggleSelectAll = () => {
         setSelected((prev) =>
@@ -301,6 +494,33 @@ export default function MembersDirectory() {
                                     </td>
                                     <td>
                                         <div className="row-actions">
+                                            <button
+                                                className="row-action-btn edit"
+                                                aria-label="Edit"
+                                                onClick={() => navigate('/add-member', {
+                                                    state: {
+                                                        mode: 'edit',
+                                                        member_id: m.id,
+                                                        member: {
+                                                            member_id: m.id,
+                                                            full_name: m.name,
+                                                            nic: m.nic || '',
+                                                            dob: m.dob || '',
+                                                            gender: m.gender || 'Male',
+                                                            email: m.email || '',
+                                                            contact: m.phone || '',
+                                                            address: m.address || '',
+                                                            emergency_contact: m.emergencyContact || '',
+                                                            plan_label: m.plan || '',
+                                                            join_date: m.joined || '',
+                                                            photo_url: m.avatar || m.photoUrl || '',
+                                                            status: m.status || 'Active',
+                                                        },
+                                                    },
+                                                })}
+                                            >
+                                                <EditIcon />
+                                            </button>
                                             <button className="row-action-btn" aria-label="Check in">
                                                 <CheckInIcon small />
                                             </button>
@@ -330,6 +550,180 @@ export default function MembersDirectory() {
                         </div>
                     </div>
                 </div>
+
+                {isEditOpen && (
+                    <div className="modal-overlay" onClick={closeEditModal}>
+                        <div className="modal-window" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <div>
+                                    <h2>Edit Member</h2>
+                                    <p>Update member details and save changes.</p>
+                                </div>
+                                <button className="modal-close" type="button" onClick={closeEditModal}>
+                                    ×
+                                </button>
+                            </div>
+
+                            {editError && <div className="error-banner">{editError}</div>}
+                            {editSuccess && <div className="info-banner">{editSuccess}</div>}
+
+                            <form className="edit-member-form" onSubmit={handleUpdateSubmit}>
+                                <div className="form-row">
+                                    <div className="form-card">
+                                        <div className="form-card-title">
+                                            <PersonIcon />
+                                            <h2>Personal Information</h2>
+                                        </div>
+                                        <div className="form-grid">
+                                            <div className="form-field">
+                                                <label>Full Legal Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.fullName}
+                                                    onChange={handleEditChange("fullName")}
+                                                />
+                                            </div>
+                                            <div className="form-field">
+                                                <label>NIC / ID Number</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.nic}
+                                                    onChange={handleEditChange("nic")}
+                                                />
+                                            </div>
+                                            <div className="form-field">
+                                                <label>Date of Birth</label>
+                                                <input
+                                                    type="date"
+                                                    value={editForm.dob}
+                                                    onChange={handleEditChange("dob")}
+                                                />
+                                            </div>
+                                            <div className="form-field">
+                                                <label>Gender</label>
+                                                <select value={editForm.gender} onChange={handleEditChange("gender")}>
+                                                    {GENDER_OPTIONS.map((g) => (
+                                                        <option key={g}>{g}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-card">
+                                        <div className="form-card-title">
+                                            <ContactIcon />
+                                            <h2>Contact & Membership</h2>
+                                        </div>
+                                        <div className="form-grid">
+                                            <div className="form-field">
+                                                <label>Email Address</label>
+                                                <input
+                                                    type="email"
+                                                    value={editForm.email}
+                                                    onChange={handleEditChange("email")}
+                                                />
+                                            </div>
+                                            <div className="form-field">
+                                                <label>Contact Number</label>
+                                                <input
+                                                    type="tel"
+                                                    value={editForm.phone}
+                                                    onChange={handleEditChange("phone")}
+                                                />
+                                            </div>
+                                            <div className="form-field form-field-full">
+                                                <label>Home Address</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.address}
+                                                    onChange={handleEditChange("address")}
+                                                />
+                                            </div>
+                                            <div className="form-field form-field-full">
+                                                <label>Emergency Contact</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.emergencyContact}
+                                                    onChange={handleEditChange("emergencyContact")}
+                                                />
+                                            </div>
+                                            <div className="form-field">
+                                                <label>Membership Plan</label>
+                                                <select value={editForm.plan} onChange={handleEditChange("plan")}>
+                                                    {PLAN_OPTIONS.map((p) => (
+                                                        <option key={p}>{p}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="form-field">
+                                                <label>Account Status</label>
+                                                <select value={editForm.status} onChange={handleEditChange("status")}>
+                                                    {STATUS_OPTIONS.map((s) => (
+                                                        <option key={s}>{s}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="form-field">
+                                                <label>Join Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={editForm.joinDate}
+                                                    onChange={handleEditChange("joinDate")}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-card">
+                                    <div className="form-card-title">
+                                        <PhotoIcon />
+                                        <h2>Profile Photo</h2>
+                                    </div>
+                                    <div className="form-field">
+                                        <label>Photo URL</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.photoUrl}
+                                            onChange={handleEditChange("photoUrl")}
+                                        />
+                                    </div>
+                                    <div className="form-field">
+                                        <label className="upload-box edit-upload-box">
+                                            <CameraIcon />
+                                            <span className="upload-title">Upload New Photo</span>
+                                            <span className="upload-sub">
+                                                PNG, JPG or WEBP formats supported up to 5MB
+                                            </span>
+                                            <input
+                                                type="file"
+                                                accept="image/png,image/jpeg,image/webp"
+                                                hidden
+                                                onChange={handleEditFileChange}
+                                            />
+                                        </label>
+                                    </div>
+                                    {editPhotoError && <div className="field-error">{editPhotoError}</div>}
+                                    {editPhotoPreview && (
+                                        <div className="photo-preview">
+                                            <img src={editPhotoPreview} alt="Photo preview" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button type="button" className="btn btn-secondary" onClick={closeEditModal}>
+                                        Cancel
+                                    </button>
+                                    <button type="submit" className="btn btn-primary" disabled={editSubmitting}>
+                                        {editSubmitting ? "Saving..." : "Save Changes"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
@@ -396,12 +790,60 @@ function AddUserIcon() {
     );
 }
 
+function PersonIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+            <path d="M4 21c0-4 4-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+function ContactIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 4h16v16H4z" stroke="currentColor" strokeWidth="2" />
+            <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+function PhotoIcon() {
+    return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="6" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="2" />
+            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+        </svg>
+    );
+}
+
 function TrashIcon() {
     return (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
             <polyline points="3 6 5 6 21 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <path
                 d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+function EditIcon() {
+    return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+                d="M12 20h9"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            <path
+                d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
