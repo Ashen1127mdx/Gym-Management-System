@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../css/AddMember.css";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 const PLAN_OPTIONS = [
     "Monthly Pro ($49/mo)",
     "Annual Elite ($399/yr)",
@@ -9,7 +10,7 @@ const PLAN_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-    "Active (Cleared for entrance)",
+    "Active",
     "Guest",
     "Flagged",
     "Expired",
@@ -17,34 +18,100 @@ const STATUS_OPTIONS = [
 
 const GENDER_OPTIONS = ["Male", "Female", "Other", "Prefer not to say"];
 
+const initialFormState = {
+    fullName: "",
+    nationalId: "",
+    dob: "",
+    gender: "Male",
+    email: "",
+    phone: "",
+    address: "",
+    emergencyContact: "",
+    plan: PLAN_OPTIONS[0],
+    status: STATUS_OPTIONS[0],
+    photoUrl: "",
+};
+
 export default function AddMember() {
-    const [form, setForm] = useState({
-        fullName: "",
-        nationalId: "",
-        dob: "",
-        gender: "Male",
-        email: "",
-        phone: "",
-        address: "",
-        emergencyContact: "",
-        plan: PLAN_OPTIONS[0],
-        status: STATUS_OPTIONS[0],
-        photoUrl: "",
-    });
+    const [form, setForm] = useState(initialFormState);
+    const [message, setMessage] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     const handleChange = (field) => (e) => {
         setForm((prev) => ({ ...prev, [field]: e.target.value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: send `form` to your PHP API, e.g.
-        // fetch("http://localhost/gym/Gym-Management-System/backend/api/members.php", {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify(form),
-        // });
-        console.log("New member payload:", form);
+        setMessage(null);
+
+        const payload = {
+            full_name: form.fullName.trim(),
+            nic: form.nationalId.trim(),
+            dob: form.dob,
+            gender: form.gender,
+            email: form.email.trim(),
+            contact: form.phone.trim(),
+            address: form.address.trim() || null,
+            emergency_contact: form.emergencyContact.trim() || null,
+            plan_label: form.plan,
+            join_date: new Date().toISOString().slice(0, 10),
+            photo: form.photoUrl.trim() || null,
+            status: form.status,
+        };
+
+        if (
+            !payload.full_name ||
+            !payload.nic ||
+            !payload.dob ||
+            !payload.email ||
+            !payload.contact ||
+            !payload.gender ||
+            !payload.plan_label ||
+            !payload.status
+        ) {
+            setMessage({ type: "error", text: "Please complete all required fields." });
+            return;
+        }
+
+        setSubmitting(true);
+
+        try {
+            const response = await fetch(`${API_BASE}/addMember.php`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const responseText = await response.text();
+            let json;
+
+            try {
+                json = responseText ? JSON.parse(responseText) : {};
+            } catch (parseError) {
+                throw new Error(`Invalid server response: ${responseText}`);
+            }
+
+            if (!response.ok || !json.success) {
+                throw new Error(json.message || json.error || "Unable to add member.");
+            }
+
+            setMessage({ type: "success", text: json.message || "Member added successfully." });
+            setForm(initialFormState);
+            navigate("/members", {
+                state: {
+                    refresh: true,
+                    newMember: json.member,
+                },
+            });
+        } catch (err) {
+            setMessage({ type: "error", text: err.message });
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
