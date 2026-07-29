@@ -34,7 +34,7 @@ try {
             m.plan_id,
             m.plan_label,
             m.join_date,
-            m.photo,
+            m.photo AS photo_url,
             m.status
         FROM members m
         ORDER BY m.join_date DESC, m.member_id DESC";

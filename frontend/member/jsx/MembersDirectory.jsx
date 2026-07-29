@@ -24,7 +24,7 @@ const normalizeMember = (member) => ({
     plan: member.plan_label || "Unassigned",
     joined: member.join_date || "",
     phone: member.contact || "",
-    initials: member.photo
+    initials: member.photo_url
         ? null
         : (member.full_name || "")
             .split(" ")
@@ -32,7 +32,7 @@ const normalizeMember = (member) => ({
             .join("")
             .slice(0, 2)
             .toUpperCase(),
-    avatar: member.photo || null,
+    avatar: member.photo_url || null,
     status: member.status || "Active",
 });
 
@@ -44,6 +44,7 @@ export default function MembersDirectory() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [deletingIds, setDeletingIds] = useState([]);
+    const [failedAvatars, setFailedAvatars] = useState([]);
 
     const fetchMembers = async () => {
         setLoading(true);
@@ -148,6 +149,10 @@ export default function MembersDirectory() {
             });
         }
     }, [location.state?.newMember]);
+
+    const handleAvatarError = (id) => {
+        setFailedAvatars((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    };
 
     return (
         <div className="members-page">
@@ -264,8 +269,13 @@ export default function MembersDirectory() {
                                     </td>
                                     <td>
                                         <div className="member-cell">
-                                            {m.avatar ? (
-                                                <img src={m.avatar} alt={m.name} className="member-avatar" />
+                                            {m.avatar && !failedAvatars.includes(m.id) ? (
+                                                <img
+                                                    src={m.avatar}
+                                                    alt={m.name}
+                                                    className="member-avatar"
+                                                    onError={() => handleAvatarError(m.id)}
+                                                />
                                             ) : (
                                                 <span className="member-initials">{m.initials}</span>
                                             )}

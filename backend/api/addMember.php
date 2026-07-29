@@ -169,7 +169,7 @@ try {
             'emergency_contact' => !empty($body['emergency_contact']) ? trim($body['emergency_contact']) : null,
             'plan_label' => !empty($body['plan_label']) ? trim($body['plan_label']) : null,
             'join_date' => $body['join_date'],
-            'photo' => $photoUrl,
+            'photo_url' => $photoUrl,
             'status' => trim($body['status']),
         ],
     ]);
