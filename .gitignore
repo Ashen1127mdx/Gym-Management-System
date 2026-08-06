@@ -1,0 +1,29 @@
+# Node modules
+frontend/node_modules/
+node_modules/
+
+# Production build output
+frontend/dist/
+dist/
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment / local settings
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Scratch / agent files
+scratch/
+walkthrough.md
+implementation_plan.md
+task.md
+.agents/

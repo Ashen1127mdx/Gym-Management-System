@@ -1,0 +1,6 @@
+{
+  "name": "FitZone - Gym Management System",
+  "description": "Comprehensive gym management platform with member check-in, attendance tracking, membership plans, trainer management, and business analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

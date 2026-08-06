@@ -1,0 +1,2 @@
+# CORS is handled entirely by backend/api/header.php.
+# Keeping this file clean to prevent duplication of headers.
