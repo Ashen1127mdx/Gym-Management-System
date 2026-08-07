@@ -2,7 +2,7 @@
 # Run this script whenever you edit backend PHP files to sync them to XAMPP.
 # Usage: Right-click → "Run with PowerShell"  OR  run from terminal: .\sync-backend.ps1
 
-$src = "C:\Users\Tharushi\Downloads\fitzone---gym-management-system\backend"
+$src = "D:\Gym\backend"
 $dst = "C:\xampp\htdocs\backend"
 
 Write-Host "Syncing backend to XAMPP htdocs..." -ForegroundColor Cyan
