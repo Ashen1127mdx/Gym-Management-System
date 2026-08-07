@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS complaints (
 );
 
 -- Empty all tables to ensure clean slate
+SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE complaints;
 TRUNCATE TABLE bookings;
 TRUNCATE TABLE payments;
@@ -120,6 +121,7 @@ DELETE FROM trainers;
 DELETE FROM members;
 DELETE FROM users;
 DELETE FROM membership_plans;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- Insert Default Admin Only
 -- Email: admin@fitzone.com, Password: Admin@123
