@@ -54,28 +54,29 @@ export const GymProvider = ({ children }) => {
   const removeToast = (id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
-  const apiFetch = async (endpoint, options = {}) => {
-    try {
-      const isDev = window.location.port === "3000";
-      const base  = isDev ? "http://localhost/backend" : "/backend";
-      const method = (options.method || "GET").toUpperCase();
-      // Only send Content-Type on requests that have a body (POST/PUT/DELETE).
-      // GET requests with Content-Type trigger CORS preflight — avoid that.
-      const headers = method === "GET"
-        ? { ...(options.headers || {}) }
-        : { "Content-Type": "application/json", ...(options.headers || {}) };
+const apiFetch = async (endpoint, options = {}) => {
+  try {
+    // Check if we're in development mode (React dev server)
+    const isDev = window.location.port === "3000" || window.location.port === "3001";
+    const base = isDev ? "http://localhost/backend" : "/backend";
+    
+    const method = (options.method || "GET").toUpperCase();
+    const headers = method === "GET"
+      ? { ...(options.headers || {}) }
+      : { "Content-Type": "application/json", ...(options.headers || {}) };
 
-      const response = await fetch(`${base}${endpoint}`, {
-        ...options,
-        credentials: "include",
-        headers,
-      });
-      const data = await response.json();
-      return data;
-    } catch {
-      return null;
-    }
-  };
+    const response = await fetch(`${base}${endpoint}`, {
+      ...options,
+      credentials: "include",
+      headers,
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("API fetch error:", error);
+    return null;
+  }
+};
   const fetchInitialData = async () => {
     const fetchedMembers = await apiFetch("/api/members.php");
     if (fetchedMembers) setMembers(fetchedMembers);
