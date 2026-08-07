@@ -64,12 +64,5 @@ Use the following login credentials to access different roles within the gym por
 
 * **Super Admin**:
   * **Email**: `admin@fitzone.com`
-  * **Password**: `admin123` (Simply click "Fill Credentials" on the login screen to autofill)
+  * **Password**: `Admin@123` (Simply click "Fill Credentials" on the login screen to autofill)
 
-* **Trainers**:
-  * **Email**: `marcus.trainer@fitzone.com` (or `sarah.trainer@fitzone.com`)
-  * **Password**: `admin123`
-
-* **Members**:
-  * **Email**: `david.lee@fitzone.com` (or `kelly.white@fitzone.com`)
-  * **Password**: `admin123`
