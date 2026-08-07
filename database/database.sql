@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE `users` ADD COLUMN `avatar_url` VARCHAR(255) NULL DEFAULT NULL AFTER `phone`
+
 -- 3. Table for Member Details (Extends Users)
 CREATE TABLE IF NOT EXISTS members (
     id VARCHAR(50) PRIMARY KEY,
