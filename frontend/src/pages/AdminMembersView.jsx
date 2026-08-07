@@ -129,7 +129,7 @@ export const AdminMembersView = () => {
     setLoading(false);
   }, [apiFetch, search]);
 
-  useEffect(() => { loadData(); }, [loadData]);
+
 
   const handleSearchChange = e => {
     setSearch(e.target.value);

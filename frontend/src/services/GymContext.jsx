@@ -93,7 +93,12 @@ const apiFetch = async (endpoint, options = {}) => {
         const res = await apiFetch("/api/auth.php?action=status");
         if (res && res.isLoggedIn) {
           setUser(res.user);
-          setActiveTab(res.user.role === "admin" ? "members" : res.user.role === "trainer" ? "trainer-dashboard" : "home");
+          setActiveTab(prev => {
+            if (prev === "login" || prev === "") {
+              return res.user.role === "admin" ? "members" : res.user.role === "trainer" ? "trainer-dashboard" : "home";
+            }
+            return prev;
+          });
           fetchInitialData();
         }
       };
