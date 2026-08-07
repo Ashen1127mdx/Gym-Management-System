@@ -152,7 +152,7 @@ export const AttendanceView = () => {
           </div>
           <div>
             <span className="text-outline">Total Logged: </span>
-            <span className="font-bold text-on-surface">{attendanceRecords.length} Check-ins</span>
+            <span className="font-bold text-on-surface">{filteredRecords.length} Check-ins</span>
           </div>
         </div>
       </div>
