@@ -112,11 +112,11 @@ CREATE TABLE IF NOT EXISTS complaints (
 
 -- Empty all tables to ensure clean slate
 SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE complaints;
-TRUNCATE TABLE bookings;
-TRUNCATE TABLE payments;
-TRUNCATE TABLE attendance_records;
-TRUNCATE TABLE gym_classes;
+DELETE FROM complaints;
+DELETE FROM bookings;
+DELETE FROM payments;
+DELETE FROM attendance_records;
+DELETE FROM gym_classes;
 DELETE FROM trainers;
 DELETE FROM members;
 DELETE FROM users;
