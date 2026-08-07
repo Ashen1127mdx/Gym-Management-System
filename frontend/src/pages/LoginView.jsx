@@ -33,10 +33,8 @@ export const LoginView = () => {
   const [passwordError, setPasswordError] = useState("");
   const [emailError, setEmailError] = useState("");
 
-  // Stats State
   const [stats, setStats] = useState({
     activeMembers: "0+",
-    equipmentHealth: "90.0%",
     activeTrainers: "0 Staff"
   });
 
@@ -50,7 +48,6 @@ export const LoginView = () => {
         if (data) {
           setStats({
             activeMembers: `${data.activeMembers.toLocaleString()}+`,
-            equipmentHealth: data.equipmentHealth,
             activeTrainers: `${data.activeTrainers} Staff`
           });
         }
@@ -196,13 +193,6 @@ export const LoginView = () => {
 
           {/* Hero Center Text */}
           <div className="max-w-xl my-auto py-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-container/30 border border-secondary/40 backdrop-blur-md mb-6">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-              <span className="text-xs font-bold tracking-wide uppercase text-secondary-fixed">
-                LIVE SYSTEM STATUS: OPERATIONAL 99.9%
-              </span>
-            </div>
-
             <h2 className="font-display-lg text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight text-white mb-6">
               Precision. Vigor. <br />
               <span className="text-secondary-container">Performance.</span>
@@ -214,14 +204,10 @@ export const LoginView = () => {
           </div>
 
           {/* Bottom Footer Stats */}
-          <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
+          <div className="grid grid-cols-2 gap-6 pt-8 border-t border-white/10">
             <div>
               <p className="font-headline-lg text-2xl font-bold text-white">{stats.activeMembers}</p>
               <p className="text-xs text-surface-variant/70">Active Members</p>
-            </div>
-            <div>
-              <p className="font-headline-lg text-2xl font-bold text-white">{stats.equipmentHealth}</p>
-              <p className="text-xs text-surface-variant/70">Equipment Health</p>
             </div>
             <div>
               <p className="font-headline-lg text-2xl font-bold text-white">{stats.activeTrainers}</p>
