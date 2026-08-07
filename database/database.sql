@@ -19,11 +19,12 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(50),
-    avatar_url VARCHAR(255) DEFAULT NULL,
     role VARCHAR(50) NOT NULL, -- 'admin', 'trainer', 'member'
     status VARCHAR(50) DEFAULT 'Active', -- 'Active', 'Expired', 'Guest', 'Flagged', 'Pending'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE `users` ADD COLUMN `avatar_url` VARCHAR(255) NULL DEFAULT NULL AFTER `phone`
 
 -- 3. Table for Member Details (Extends Users)
 CREATE TABLE IF NOT EXISTS members (
@@ -37,8 +38,7 @@ CREATE TABLE IF NOT EXISTS members (
     emergency_contact VARCHAR(100),
     plan VARCHAR(100),
     join_date VARCHAR(50),
-    avatar_url LONGTEXT,
-    plan_expires_at DATETIME DEFAULT NULL,
+    avatar_url VARCHAR(255),
     FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -73,8 +73,7 @@ CREATE TABLE IF NOT EXISTS attendance_records (
     time VARCHAR(50) NOT NULL,
     date VARCHAR(50) NOT NULL,
     status VARCHAR(50) NOT NULL, -- 'Active', 'Guest', 'Flagged'
-    avatar_url VARCHAR(255) DEFAULT NULL,
-    checked_by_role VARCHAR(20) DEFAULT 'admin'
+    avatar_url VARCHAR(255)
 );
 
 -- 7. Table for Bookings (Pre-orders)
@@ -113,13 +112,6 @@ CREATE TABLE IF NOT EXISTS complaints (
     FOREIGN KEY (filed_by_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 10. Table for Equipment
-CREATE TABLE IF NOT EXISTS equipment (
-    id INT(11) AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    status VARCHAR(50) NOT NULL
-);
-
 -- Empty all tables to ensure clean slate
 SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM complaints;
@@ -131,7 +123,6 @@ DELETE FROM trainers;
 DELETE FROM members;
 DELETE FROM users;
 DELETE FROM membership_plans;
-DELETE FROM equipment;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- Insert Default Admin Only
@@ -142,18 +133,4 @@ INSERT INTO users (id, name, email, password, phone, role, status) VALUES
 -- Re-insert Membership Plans structure for user selector functionality
 INSERT INTO membership_plans (id, name, price, billing_cycle, tier, is_popular, features) VALUES
 ('plan-1', 'Day Pass', 9.00, 'per day', 'Standard', 0, '["Full facility access","Locker room access","1 complimentary towel"]')
-ON DUPLICATE KEY UPDATE id=id;
-
--- Seed Equipment list
-INSERT INTO equipment (id, name, status) VALUES
-(1, 'Treadmill Alpha', 'Functional'),
-(2, 'Treadmill Beta', 'Functional'),
-(3, 'Rowing Machine', 'Functional'),
-(4, 'Power Cage', 'Functional'),
-(5, 'Dumbbell Set 10-50lbs', 'Functional'),
-(6, 'Incline Bench Press', 'Functional'),
-(7, 'Stationary Bike A', 'Functional'),
-(8, 'Stationary Bike B', 'Maintenance'),
-(9, 'Leg Press Machine', 'Functional'),
-(10, 'Cable Crossover Station', 'Functional')
 ON DUPLICATE KEY UPDATE id=id;
