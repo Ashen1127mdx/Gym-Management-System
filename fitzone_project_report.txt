@@ -1,0 +1,308 @@
+================================================================================
+                           ASSIGNMENT - GROUP PROJECT
+================================================================================
+                          Web Application Development
+                                  CST 226 - 2
+
+                                    FitZone
+                            Gym Management System
+
+                               Group No: CST 04
+                Computer Science and Technology Degree Program
+                Department of Computer Science and Informatics
+                          Faculty of Applied Sciences
+                     Uva Wellassa University of Sri Lanka
+                                     2026
+
+================================================================================
+                                 Group Details
+================================================================================
+Group No: CST 04
+
+No.   Name of the Student      Enrollment Number    E-mail address
+01    P.A.M.Pathirathne        UWU/CST/23/098       cst23098@std.uwu.ac.lk
+02    [Teammate 2 Name]        [Enrollment Number]  [Email Address]
+03    [Teammate 3 Name]        [Enrollment Number]  [Email Address]
+04    [Teammate 4 Name]        [Enrollment Number]  [Email Address]
+05    [Teammate 5 Name]        [Enrollment Number]  [Email Address]
+06    [Teammate 6 Name]        [Enrollment Number]  [Email Address]
+07    [Teammate 7 Name]        [Enrollment Number]  [Email Address]
+
+================================================================================
+                                 List of Tables
+================================================================================
+Table 1: Frontend Technologies ............................................. 8
+Table 2: Backend Technologies .............................................. 9
+Table 3: Database Management ............................................... 10
+Table 4: Development Tools ................................................. 10
+Table 5: Individual Contribution ........................................... 15
+
+================================================================================
+                               Table of Contents
+================================================================================
+1. Project Description...................................................... 1
+   1.1 Introduction......................................................... 1
+   1.2 Aims & Objectives.................................................... 1
+       1.2.1 Aim............................................................ 2
+       1.2.2 Objectives..................................................... 2
+2. System Functions/Features................................................ 2
+3. Use of Object-Oriented Programming (OOP)................................. 3
+   3.1 Classes and Objects.................................................. 4
+   3.2 Encapsulation........................................................ 5
+   3.3 Inheritance.......................................................... 5
+   3.4 Abstraction.......................................................... 6
+   3.5 Polymorphism......................................................... 7
+   3.6 Constructors and Dependency Initialization........................... 7
+4. Technologies Used........................................................ 8
+   4.1 Frontend Technologies................................................ 8
+   4.2 Backend Technologies................................................. 9
+   4.3 Database Management.................................................. 10
+   4.4 Development Tools.................................................... 10
+5. Database Design.......................................................... 11
+   5.1 ER Diagram........................................................... 11
+6. Appendixes............................................................... 11
+7. Conclusion............................................................... 15
+   Individual Contribution.................................................. 15
+   GitHub Repository........................................................ 16
+   Demonstration Video...................................................... 16
+   References............................................................... 16
+
+================================================================================
+                             1. Project Description
+================================================================================
+
+1.1 Introduction
+FitZone is a web-based gym management application developed to provide fitness 
+centers with an automated, secure, and efficient platform for organizing daily 
+gym operations, managing member plans, processing attendance check-ins, and 
+tracking payments, while enabling members to track their plans and sessions. 
+The system aims to replace traditional, manual gym record-keeping and simplify 
+membership interactions through an organized, clean, and user-friendly interface.
+
+The system supports three main user roles: Members, Trainers, and Admins. 
+Members can manage their profiles, review check-in history, submit membership 
+plan change requests, and check their workout routines. Trainers are provided 
+with roster management tools, workout schedule creators, and coaching 
+attendance trackers. Admins oversee all plans, approve or reject change requests, 
+view financial reports, and manage trainer profiles.
+
+The scope of FitZone covers the essential operations of a modern gym, including 
+user authentication, member dashboard statistics, plan request handling, 
+attendance verification, and session scheduling. The system is designed to 
+ensure smooth interactions between administrators, training staff, and members.
+
+Overall, FitZone is developed as a complete management solution for fitness gyms, 
+providing a reliable platform that increases administrative efficiency, tracks 
+revenue details, and improves member engagement.
+
+1.2 Aims and Objectives
+
+1.2.1 Aim
+To design and develop a secure, responsive, and user-friendly web-based gym 
+management system that provides members with a clean interface for billing and 
+scheduling while enabling gym staff and administrators to manage fitness operations.
+
+1.2.2 Objectives
+1. To develop a member portal that allows users to register, track their plan 
+   status, view session schedules, check attendance logs, and request plan upgrades.
+2. To provide an administrative dashboard that enables gym managers to customize 
+   plans, approve membership requests, log physical payments, and view real-time 
+   revenue statistics.
+3. To implement a secure role-based access control architecture using secure sessions 
+   and clean prepared statements to guarantee reliable data operations.
+
+================================================================================
+                          2. System Functions/Features
+================================================================================
+FitZone is designed to provide clean, role-based workflows for gym managers, 
+trainers, and members. The major functionalities are categorized below:
+
+1. User Management
+   - Registration and login systems for members and trainers.
+   - Secure Admin login console.
+   - Access control restricting API endpoints based on session roles.
+   - Cross-tab profile updates using browser BroadcastChannel.
+
+2. Membership Plan Management
+   - Admin tools to add, edit, and delete plans.
+   - Support for custom billing cycles (Daily, Weekly, Monthly, and custom days/weeks/months/years).
+   - Plan request submission and tracking interface in the member portal.
+   - On-the-fly expiration sweeps updating active subscriptions to "No Plan".
+
+3. Attendance Logging
+   - Front desk check-in interface for Admins to register member entry.
+   - Coaching attendance logger for Trainers to record session attendance.
+   - Dynamic check-in counters counting only admin-logged entries for front desk, 
+     and trainer-logged entries for trainers.
+
+4. Scheduling & Workout Routines
+   - Session scheduler in the trainer's portal.
+   - Workout builder to assign targets and sets to trainees.
+   - Next session cards and routine trackers in the member dashboard.
+
+5. Administration & Reporting
+   - Payment logs recording transaction amounts and months on plan approvals.
+   - Reports view featuring total actual revenue, estimated revenue, active 
+     members counts, and request progress.
+
+================================================================================
+                    3. Use of Object-Oriented Programming (OOP)
+================================================================================
+The FitZone application applies Object-Oriented Programming (OOP) principles in 
+the PHP backend to create a modular, maintainable, reusable, and secure structure. 
+The backend is organized into config layers, controllers, and models.
+
+3.1 Classes and Objects
+Classes are used to group related functions into reusable modules. Instances 
+(objects) of these classes are instantiated to execute business logic.
+Main Classes Used:
+1. Controllers: auth.php, members.php, trainers.php, plans.php, attendance.php, reports.php
+2. Models: User.php, Member.php, Trainer.php, MembershipPlan.php, Attendance.php, Payment.php
+3. Config: Database.php
+
+Example:
+class Member extends User {
+    private $memberId;
+    private $plan;
+    private $planExpiresAt;
+    
+    public function __construct($db) {
+        parent::__construct($db);
+    }
+}
+
+3.2 Encapsulation
+Encapsulation is achieved by making class properties protected or private and 
+restricting direct modifications from outside. Accessible controls are exposed 
+via methods (getters and setters) to keep the internal state safe.
+Example:
+class User {
+    protected $id;
+    protected $name;
+    protected $email;
+    protected $password;
+    protected $phone;
+    protected $role;
+    protected $status;
+}
+The password is kept protected and is only processed through safe verify methods, 
+preventing access from endpoint scripts.
+
+3.3 Inheritance
+Inheritance allows base structures to be reused by child classes, reducing code 
+duplication.
+Example:
+Since Admins, Trainers, and Members share basic properties (id, name, email, phone, status), 
+both Member and Trainer inherit from the User class:
+class Member extends User {
+    // Inherits name, email, phone, status, and db properties from User
+}
+
+3.4 Abstraction
+Abstraction hides low-level database operations behind simple methods.
+Example:
+The Database class abstracts away details of PDO connections, query preparations, 
+and transaction commits. Endpoints call simple methods without knowing how the SQL 
+is run:
+$member = new Member($db);
+$member->update();
+
+3.5 Polymorphism
+Polymorphism allows methods to behave differently depending on the class object.
+Example:
+Both Member and Trainer override the base class methods to update their specific 
+tables alongside the common `users` table:
+// Member.php overrides save methods to handle members table fields
+// Trainer.php overrides save methods to handle trainers table fields
+
+3.6 Constructors and Dependency Initialization
+Constructors initialize the required connection links when objects are created.
+Example:
+public function __construct($db) {
+    $this->conn = $db;
+}
+
+================================================================================
+                              4. Technologies Used
+================================================================================
+
+4.1 Frontend Technologies
+--------------------------------------------------------------------------------
+| Technology        | Purpose                                                  |
+|-------------------|----------------------------------------------------------|
+| React.js          | Renders a dynamic, component-based user interface.       |
+| JavaScript (ES6+) | Implements client-side application logic and state.      |
+| Vanilla CSS3      | Configures theme variables, layout styling, and cards.   |
+| Fetch API         | Facilitates client-server RESTful communication.         |
+| Vite              | Handles fast hot-reloading and optimized production build.|
+--------------------------------------------------------------------------------
+
+4.2 Backend Technologies
+--------------------------------------------------------------------------------
+| Technology        | Purpose                                                  |
+|-------------------|----------------------------------------------------------|
+| PHP (8.x)         | Runs the backend business logic and REST endpoints.      |
+| RESTful API       | Serves JSON request and response payloads.               |
+| PDO               | Connects to database securely using prepared statements. |
+| BCrypt Hashing    | Provides secure password hashing via password_hash().    |
+--------------------------------------------------------------------------------
+
+4.3 Database Management
+--------------------------------------------------------------------------------
+| Technology        | Purpose                                                  |
+|-------------------|----------------------------------------------------------|
+| MySQL / SQLite    | Stores membership plans, records, and payment logs.      |
+--------------------------------------------------------------------------------
+
+4.4 Development Tools
+--------------------------------------------------------------------------------
+| Tool              | Purpose                                                  |
+|-------------------|----------------------------------------------------------|
+| VS Code           | Code editor used for writing frontend and backend files. |
+| Git & GitHub      | Manages version control and feature branches.            |
+| phpMyAdmin / XAMPP| Serves local Apache web server and manages MySQL database.|
+--------------------------------------------------------------------------------
+
+================================================================================
+                               5. Database Design
+================================================================================
+
+5.1 Entity Relationships (ER) Summary
+- A Member can submit multiple Membership_Requests (1:M).
+- A Member can have multiple check-in entries in Attendance_Records (1:M).
+- A Member can make multiple Payments (1:M).
+- A Trainer can be assigned to multiple Members in their roster (1:M).
+- An Admin manages Membership_Plans and resolves Complaints.
+
+================================================================================
+                                 6. Appendixes
+================================================================================
+(Add screenshots of your application layout here)
+
+- Appendix A: Login Page (Clean, high-energy layout)
+- Appendix B: Admin Dashboard & Reports (Revenue lines, members count, plan cards)
+- Appendix C: Trainer Dashboard (Trainees roster, coaching attendance table)
+- Appendix D: Member Dashboard (Welcome banner, current plan card, session bookings)
+- Appendix E: Membership Request Dialog (Option selector including custom days/weeks)
+
+================================================================================
+                                 7. Conclusion
+================================================================================
+The FitZone Gym Management System was successfully developed, integrating a 
+responsive React frontend with an object-oriented PHP backend REST API. The system 
+accomplishes its aims of simplifying gym management by automating membership billing, 
+on-the-fly plan expiration, attendance logs, and portal interactions.
+
+Individual Contribution
+--------------------------------------------------------------------------------
+| Team Member        | Frontend Contribution        | Backend Contribution     |
+|--------------------|------------------------------|--------------------------|
+| P.A.M.Pathirathne  | Report panel UI, Settings    | DB Schema, clean API endpoints|
+| [Teammate 2]       | [Details]                    | [Details]                |
+| [Teammate 3]       | [Details]                    | [Details]                |
+--------------------------------------------------------------------------------
+
+GitHub Repository: https://github.com/Ashen1127mdx/Gym-Management-System.git
+Demonstration Video: [Insert Video Link]
+References: [Insert Course references]
+================================================================================
