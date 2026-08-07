@@ -581,7 +581,7 @@ export const TrainerDashboardView = () => {
               <p className="font-headline-lg text-3xl font-extrabold text-on-surface">
                 {(() => {
                   const rosterMemberIds = roster.map(m => m.member_id || m.memberId);
-                  return attendanceRecords.filter(r => rosterMemberIds.includes(r.member_id)).length;
+                  return attendanceRecords.filter(r => r.checked_by_role === 'trainer' && rosterMemberIds.includes(r.member_id)).length;
                 })()}
               </p>
             </div>
@@ -928,7 +928,7 @@ export const TrainerDashboardView = () => {
 
             {(() => {
               const rosterMemberIds = roster.map(m => m.member_id || m.memberId);
-              const trainerAttendanceRecords = attendanceRecords.filter(r => rosterMemberIds.includes(r.member_id));
+              const trainerAttendanceRecords = attendanceRecords.filter(r => r.checked_by_role === 'trainer' && rosterMemberIds.includes(r.member_id));
               return (
                 <div className="mt-10 border-t border-outline-variant/20 pt-8">
                   <div className="flex items-center gap-2 mb-5">
