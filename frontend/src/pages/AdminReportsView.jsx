@@ -214,7 +214,7 @@ export const AdminReportsView = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             <StatCard icon="group" label="Total Members" value={fmt(stats.total_members)} sub={`${fmt(stats.active_members)} currently active`} />
             <StatCard icon="payments" label="Estimated Monthly Revenue" value={lkr(stats.revenue_estimate)} sub="Based on active members × plan price" />
-            <StatCard accent icon="monetization_on" label="Actual Monthly Revenue" value={lkr(stats.monthly_revenue)} sub={`From ${stats.monthly_payment_count || 0} logged physical payments`} />
+            <StatCard accent icon="monetization_on" label="Actual Revenue" value={lkr(stats.monthly_revenue)} sub={`From ${stats.monthly_payment_count || 0} logged physical payments`} />
           </div>
 
           <div className="grid grid-cols-1 gap-8">
